@@ -133,6 +133,8 @@ def fillOthers(df,sample):
     booleani = getBooelan(getUniques(df))
     for col in df.columns:
         # print(col)
+        if col == 'Anomalia #1':
+            df[col] = df[col].replace(np.nan,sample[col])
         if col not in booleani and col in col_s:
             # print('in')
             df[col] = df[col].replace(np.nan,sample[col])
