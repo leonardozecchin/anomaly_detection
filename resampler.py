@@ -8,7 +8,7 @@ def cleanCSV(df):
   arr_col = []
   for col in df.columns:
     if df[col].isna().all():
-        print("La colonna", col, "contiene solo valori NaN.")
+        print("Column", col, "contains only NaN values.")
         arr_col.append(col)
   df_cleaned = df.drop(columns=arr_col)
   df_cleaned = df_cleaned.replace('---', 0)
@@ -19,7 +19,7 @@ def sortDf(df):
         df = df.sort_values('TIMESTAMP',ascending=True)
         df.index = range(len(df))
     else:
-        print("La colonna TIMESTAMP non è presente nel dataframe.")
+        print("Column TIMESTAMP is not in the dataframe.")
         return None
     return df
 
@@ -94,7 +94,7 @@ def getMax(dict):
 
 def plotColumn(df,col):
     if col not in df.columns:
-        print("La colonna", col, "non è presente nel dataframe.")
+        print("Column", col, "is not in the dataframe.")
         return None
     df_toPlot = df[col]
     plt.plot(df_toPlot)
@@ -121,13 +121,11 @@ def getGeneralBooleans(df1,df2,df3):
     intersection.sort()
     return intersection
 
-def fillBooleans(df,booleans):
-    counters = countOccurences(df,getUniques(df))
-    massimi = getMax(counters)
-    r_max = reversedMax(massimi)
+def fillBooleans(df,booleans,dizionario):
     for key in booleans:
-        if key != 'Modalità Estate/Inverno (solo scrittura)':        
-            df[key] = df[key].replace(np.nan,r_max[key])
+        if key != 'Modalità Estate/Inverno (solo scrittura)' and key in dizionario.keys():
+            # print(f'{key}: {dizionario[key]}')        
+            df[key] = df[key].replace(np.nan,dizionario[key])
     return df
 
 def fillOthers(df,sample):
@@ -150,11 +148,46 @@ def getResampledDf(df,file_path):
     else:
         df_resampled = pd.read_csv('last12months/12months/'+ file_path)
         return None, df_resampled
+    
+def getLastValues(df):
+    d_sample = df.iloc[-1]
+    dictionary = dict.fromkeys(df.columns,None)
+
+    for col in df.columns:
+        if col in d_sample.index:
+            dictionary[col] = d_sample[col]
+
+    return dictionary
 
 if __name__ == '__main__':
-    file1 = sys.argv[1]
-    file2 = sys.argv[2]
-    file3 = sys.argv[3]
+
+    parameter_list = sys.argv
+
+
+    if '--file1'in parameter_list:
+        file1 = os.path.abspath(sys.argv[parameter_list.index("--file1")+1])
+    else:
+        print("Mandatory parameter --file1 not found please check input parameters")
+        sys.exit()
+    if '--file2'in parameter_list:
+        file2 = os.path.abspath(sys.argv[parameter_list.index("--file1")+1])
+    else:
+        print("Mandatory parameter --file1 not found please check input parameters")
+        sys.exit()
+    if '--file3'in parameter_list:
+        file3 = os.path.abspath(sys.argv[parameter_list.index("--file1")+1])
+    else:
+        print("Mandatory parameter --file1 not found please check input parameters")
+        sys.exit()
+    if '--makeFinalFile'in parameter_list:
+        makeFinalFile = os.path.abspath(sys.argv[parameter_list.index("--file1")+1])
+    else:
+        makeFinalFile = False
+    
+
+    # file1 = sys.argv[1]
+    # file2 = sys.argv[2]
+    # file3 = sys.argv[3]
 
     df = pd.read_csv(file1)  
     df2 = pd.read_csv(file2)
@@ -172,12 +205,14 @@ if __name__ == '__main__':
     if 'last_20Row_204300479.csv' in os.listdir('last12months/12months'):
         df1_last20 = pd.read_csv('last12months/12months/last_20Row_204300479.csv')
 
-    if 'd_test_filled.csv' in os.listdir('last12months/12months'):
+    if 'd_test_filled.csv' in os.listdir('last12months/12months') and makeFinalFile == False:
         d_test_filled = pd.read_csv('last12months/12months/d_test_filled.csv')
     else:
         print('Filling....')
-        d1 = pd.read_csv('last12months/20230721-153054/204300479_LUNA IN PLUS AIR.csv') 
+        d1 = pd.read_csv('last12months/20230721-153054/204300479_LUNA IN PLUS AIR.csv')
+        print("Cleaning 204300479_LUNA IN PLUS AIR.csv...") 
         d1 = cleanCSV(d1)
+        print("Cleaned!")
         d1['dt'] = pd.to_datetime(d1['TIMESTAMP'],unit='ms')
         d1_sorted = sortDf(d1)
         d1_resampled = resampleDf(d1_sorted,'30s')
@@ -188,16 +223,19 @@ if __name__ == '__main__':
             df_resampled.head(50).to_csv('last12months/df1.csv')
 
 
+        dictionary = getLastValues(d1_resampled.tail())
         generalBooleans = getGeneralBooleans(df_resampled,df2_resampled,df3_resampled)
-        d_test_fB = fillBooleans(df_resampled,generalBooleans)
+        d_test_fB = fillBooleans(df_resampled,generalBooleans,dictionary)
         d_campione = d1_resampled.iloc[-1]
         d_test_filled = fillOthers(d_test_fB,d_campione)
-        d_test_filled = cleanCSV(d_test_filled)
+        # print('Cleaning Final dataset...')
+        # d_test_filled = cleanCSV(d_test_filled)
+        # print('Cleaned!')
 
         d_test_filled.to_csv('last12months/12months/d_test_filled.csv')
         print('Done!')
-        d_finale20 = df_resampled.head(20)
-        d_finale20.to_csv('last12months/12months/last_20Row_204300479.csv') 
+        # d_finale20 = df_resampled.head(20)
+        # d_finale20.to_csv('last12months/12months/last_20Row_204300479.csv') 
 
-        if 'last_20Row_204300479.xlsx' not in os.listdir('last12months/12months'):
-            df1_last20.to_excel('last12months/12months/last_20Row_204300479.xlsx')
+        # if 'last_20Row_204300479.xlsx' not in os.listdir('last12months/12months'):
+        #     d_finale20.to_excel('last12months/12months/last_20Row_204300479.xlsx')
