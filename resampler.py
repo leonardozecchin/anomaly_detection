@@ -182,7 +182,7 @@ if __name__ == '__main__':
         print("Mandatory parameter --file1 not found please check input parameters")
         sys.exit()
     if '--makeFinalFile'in parameter_list:
-        makeFinalFile = os.path.abspath(sys.argv[parameter_list.index("--file1")+1])
+        makeFinalFile = bool(os.path.abspath(sys.argv[parameter_list.index("--file1")+1]))
     else:
         makeFinalFile = False
     
