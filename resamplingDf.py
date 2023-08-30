@@ -51,7 +51,7 @@ def getResampledDf(df,file_path):
     if not checkFileInFolder(folder ='last12months/12months',file=file_path):
         df_sorted = sortDf(df)
         df_sorted = cleanCSV(df_sorted)
-        df_resampled = resampleDf(df_sorted,'30s')
+        df_resampled = resampleDf(df_sorted,'30min')
         df_resampled.to_csv('last12months/12months/' + file_path)
         return df_sorted, df_resampled
     else:
