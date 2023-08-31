@@ -51,10 +51,7 @@ def getResampledDf(df,file_path,seconds = '30s'):
     if not checkFileInFolder(folder ='last12months/12months',file=file_path):
         df_sorted = sortDf(df)
         df_sorted = cleanCSV(df_sorted)
-        # df_sorted['Anomalia #1']= df_sorted['Anomalia #1'].replace(np.nan,0)
-        print(gotAnomalies(df_sorted))
-        df_sorted.to_csv('last12months/12months/220330932_sorted.csv')
-        df_resampled = resampleDf(df_sorted,seconds)
+        df_resampled = resampleDf(df_sorted,'30s')
         df_resampled.to_csv('last12months/12months/' + file_path)
         return df_sorted, df_resampled
     else:
