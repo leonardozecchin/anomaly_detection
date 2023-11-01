@@ -47,11 +47,11 @@ def gotAnomalies(df:pd.DataFrame):
             break
     return b, unique
 
-def getResampledDf(df,file_path,seconds = '30s'):
+def getResampledDf(df,file_path,deltaT = '30s'):
     if not checkFileInFolder(folder ='last12months/12months',file=file_path):
         df_sorted = sortDf(df)
         df_sorted = cleanCSV(df_sorted)
-        df_resampled = resampleDf(df_sorted,'30s')
+        df_resampled = resampleDf(df_sorted,deltaT)
         df_resampled.to_csv('last12months/12months/' + file_path)
         return df_sorted, df_resampled
     else:
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     df = pd.read_csv(file1)
     df['dt'] = pd.to_datetime(df['TIMESTAMP'],unit='ms')
     # df['Anomalia #1'] = df['Anomalia #1'].replace(np.nan,0)
-    df_sorted, df_resampled = getResampledDf(df,'220330932_resampled30s.csv','30s')
+    df_sorted, df_resampled = getResampledDf(df,'220330932_resampled33min.csv','33min')
     # df_resampled['Anomalia #1'] = df_resampled['Anomalia #1'].replace(np.nan,0)
 
     if gotAnomalies(df_resampled):
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     print('The shape of the dataframe with no NaN values is: ',dfWithNoNan.shape)
     if dfWithNoNan.shape[0] > 0:
-        dfWithNoNan.to_csv('last12months/12months/220330932_resampled30s_noNan.csv')
+        dfWithNoNan.to_csv('last12months/12months/220330932_resampled33min_noNan.csv')
 
 
     
